@@ -4,6 +4,7 @@
 	let imagesTab;
 	let imageDetailsTab;
 	let commentsTab;
+	let commentForm;
 	
 	let currentSet = 1;
 	let images;
@@ -54,6 +55,12 @@
 				document.getElementById("comments"),
 				document.getElementById("comments-body")
 			);
+			
+			
+			
+			 commentForm = new CommentForm(
+                document.getElementById("comments-field"),
+                document.getElementById("comments-form"));
 			
 		};
 		
@@ -353,9 +360,8 @@
             if (selectedImg !== undefined){
 
                 self.update(selectedImg);
-
                	commentsTab.reset();  // devo farlo ogni volta per aggiornare la tabella
-                commentsTab.show(photoSelected.comments);
+                commentsTab.show(selectedImg.comments);
 
             }
             else this.message.textContent = "Problem on showing details";
@@ -411,33 +417,32 @@
 
         // chiama la update() se meeting non è vuota, altrimenti stampa l'alert
         this.show = function (comments) {
-
             let self = this;
+            let commentList = comments
 
             // se albums non è vuota...
             if (comments.length !== 0){
-
-                self.update(comments);
+                self.update(commentList);
                 //commentForm.show();
 
             }
-            else this.message.textContent = "No comments yet!";
+            //else this.message.textContent = "No comments yet!";
             commentForm.show();
         };
 
         // compila la tabella con i meetings che il server gli fornisce
         this.update = function (comments) {
-
+			
             let len = comments.length;
             let row, commentCell;
 
             if (len === 0) {  // controllo inutile ma per sicurezza XD
                 message.textContent = "No comments yet!";
-
+				
             } else {
                 this.body.innerHTML = ""; // svuota il body della tabella
-                this.message.textContent = "";
-
+                //message.textContent = "";
+				
                 let self = this;
 
                 comments.forEach(function (comment) {
@@ -446,7 +451,7 @@
 
                     // prima cella della riga (titolo)
                     commentCell = document.createElement("td");
-                    commentCell.textContent = comment.username + ": " + comment.text;
+                    commentCell.textContent = comment.userName + ": " + comment.text;
                     row.appendChild(commentCell);
 
                     self.body.appendChild(row);
@@ -456,6 +461,29 @@
         }
 
     }
+    
+    
+    function CommentForm(field, form) {
+        this.field = field;
+        this.form = form;
+
+        this.reset = function () {
+            this.field.style.visibility = "hidden";
+        }
+
+        this.show = function () {
+            this.field.style.visibility = "visible";
+        };
+
+    }
+
+    
+    
+    
+    
+    
+    
+    
 	
 	
 	

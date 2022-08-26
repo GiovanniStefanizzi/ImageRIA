@@ -18,8 +18,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import beans.Album;
+import beans.Comment;
 import beans.Image;
 import dao.AlbumDAO;
+import dao.CommentDAO;
 import utility.ConnectionHandler;
 
 
@@ -56,7 +58,9 @@ public class GetImages extends HttpServlet {
 		
 		
 		AlbumDAO albumDao = new AlbumDAO(connection);
+		CommentDAO commentDao = new CommentDAO(connection);
 		List<Image> images = null;
+		List<Comment> comments = null;
 		
 		try {
 			Album album = albumDao.getById(albumId);
@@ -66,7 +70,10 @@ public class GetImages extends HttpServlet {
 				return;
 			}
 			images = albumDao.getAllImagesFromAlbum(album.getId());
-			
+			for(int i = 0; i<images.size();i++) {
+				comments = commentDao.getComments(images.get(i).getId());
+				images.get(i).addComments(comments);
+			}
 		}
 		catch(SQLException e){
 			e.printStackTrace();
