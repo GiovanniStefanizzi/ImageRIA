@@ -1,6 +1,10 @@
 (function(){
 	let userAlbumsTab;
 	let otherUserAlbumsTab;
+	let imagesTab;
+	
+	let currentSet = 1;
+	let images;
 	
 	
 	window.addEventListener("load", () => {
@@ -29,6 +33,12 @@
 				document.getElementById("otheralbums"),
 				document.getElementById("otheralbums-body")
 			);
+			
+			imagesTab = new ImagesTab(
+                document.getElementById("image-msg"),
+                document.getElementById("images"),
+                document.getElementById("images-body")
+            );
 			
 		};
 		
@@ -176,13 +186,13 @@
                     anchor.appendChild(linkText);
                     anchor.setAttribute('albumId', album.id);
 
-					/*anchor.addEventListener("click", (e) => {
+					anchor.addEventListener("click", (e) => {
 
                         e.preventDefault();
                         currentSet = 1;
-                        photoTable.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
+                        imagesTab.init(e.target.getAttribute("idAlbum"));  // quando faccio click su un album
 
-                    }, false);*/
+                    }, false);
                     anchor.href = "#";
 					
 					linkCell.appendChild(anchor);
@@ -195,6 +205,110 @@
 			}
 		}
 	}
+	
+	
+	
+	function ImagesTab(message, table, body){
+		
+		this.message = message;
+		this.table = table;
+		this.body = body;
+		
+		this.reset = function () {
+            this.body.innerHTML = "";
+            this.table.style.visibility = "hidden";
+        }
+        
+        this.init = function (albumId) {
+            let photoController = new ImagesController(this.message);
+            
+            photoController.getPhotos(albumId);
+            
+        }
+        
+        this.show = function (images) {
+            let self = this;
+            self.update(images);
+        };
+        
+        
+        // compila la tabella con le foto che il server gli fornisce
+        this.update = function (images) {
+        	let len = photos.length;
+        	let row;
+        	
+        	 this.body.innerHTML = ""; // svuota il body della tabella
+             this.message.textContent = "";
+             
+             let self = this;
+             row = document.createElement("tr");
+        
+        	if(currentSet>1){
+				let scrollBack = document.createElement("button");
+				scrollBack.textContent = "<";
+				scrollBack.addEventListener("click", (e)=>{
+					e.preventDefault();
+                    currentSet = currentSet-1;
+                    self.show(images);
+				}, false);
+				
+				let btnCell = document.createElement("td");
+				btnCell.appendChild(scrollBack);
+				row.appendChild(btnCell);
+			}
+			
+			let iter = (currentSet-1)*5;
+			
+			for(let i = 0; i<5 && iter<len; i++){
+				
+				let image = images[iter];
+				let imageCell =  document.createElement("td");
+				let title = document.createElement("p");
+				title.textContent = image.title;
+				
+				let anchor = document.createElement("a");
+			    let img = document.createElement("img");
+			    img.className = "image-thumbnail";
+			    img.src = image.source;
+			    anchor.appendChild(img);
+			    
+			    anchor.setAttribute('idImage', image.imageId);
+
+				/*
+                anchor.addEventListener("mouseover", (e) => {
+
+                    e.preventDefault();
+                    let modal = document.getElementById("ModalWindow");
+                    modal.style.display = "block";           
+                    let arg = e.target.closest("a").getAttribute("idImage");
+                    photoDetailsTable.show(arg);
+                     }, false); */
+                     
+                imageCell.appendChild(title);
+                imageCell.appendChild(anchor);
+                row.appendChild(imageCell);
+                
+                iter +=1;     
+			}
+			
+			if(currentSet*5 < images.length){
+				let scrollForward = document.createElement("button");
+				scrollForward.textContent = ">";
+				scrollForward.addEventListener("click", (e)=>{
+					e.preventDefault();
+                    currentSet = currentSet+1;
+                    self.show(images);
+				}, false);
+				
+				let btnCell = document.createElement("td");
+				btnCell.appendChild(scrollForward);
+				row.appendChild(btnCell);
+			}
+			
+			self.body.appendChild(row);
+            this.table.style.visibility = "visible";
+	    }
+	}	
 	
 	
 	
@@ -247,6 +361,35 @@
 	}
 	
 	
+	function ImagesController(_message){
+		this.message = _message;
+		this.getPhotos = function(idAlbum) {
+	    	let self = this;
+	    	makeCall("GET", "GetImages?album=" + idAlbum, null,
+				function (req) {
+					
+                    if (req.readyState === XMLHttpRequest.DONE) {
+
+                        let _message = req.responseText;
+
+                        if (req.status === 200) {
+							
+                            images = JSON.parse(_message);
+                            imagesTab.show(images);
+
+				
+                        } else {
+							
+                            self.message.textContent = _message;
+                        }
+                    }
+                    
+                }
+			);
+		}	
+	
+	
+	}
 	
 	
 
