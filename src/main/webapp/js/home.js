@@ -2,6 +2,8 @@
 	let userAlbumsTab;
 	let otherUserAlbumsTab;
 	let imagesTab;
+	let imageDetailsTab;
+	let commentsTab;
 	
 	let currentSet = 1;
 	let images;
@@ -39,6 +41,19 @@
                 document.getElementById("images"),
                 document.getElementById("images-body")
             );
+            
+            imageDetailsTab = new ImageDetailsTab(
+                document.getElementById("details-msg"),
+                document.getElementById("details"),
+                document.getElementById("details-body")
+            );
+                
+                
+            commentsTab = new CommentsTab(
+				document.getElementById("comments-msg"),
+				document.getElementById("comments"),
+				document.getElementById("comments-body")
+			);
 			
 		};
 		
@@ -90,19 +105,22 @@
 					row = document.createElement("tr");
 					
 					
-					//first row
+					//first col
 					titleCell=document.createElement("td");
+					titleCell.className = "album-cell";
 					titleCell.textContent = album.title;
                     row.appendChild(titleCell);
                     
                     
-                    //second row
+                    //second col
                     dateCell = document.createElement("td");
+                    dateCell.className = "album-cell";
                     dateCell.textContent = album.date;
                     row.appendChild(dateCell);
                     
                     
                     linkCell = document.createElement("td");
+                    linkCell.className = "album-cell";
                     anchor = document.createElement("a");
                     let linkText = document.createTextNode("Show");
                     anchor.appendChild(linkText);
@@ -129,7 +147,7 @@
 	}
 	
 	
-		function OtherUserAlbumsTab(message,table, body){
+	function OtherUserAlbumsTab(message,table, body){
 		this.message = message;
 		this.table = table;
 		this.body = body;
@@ -165,23 +183,27 @@
 					row = document.createElement("tr");
 					
 					
-					//first row
+					//first col
 					titleCell=document.createElement("td");
 					titleCell.textContent = album.title;
+					titleCell.className = "album-cell";
                     row.appendChild(titleCell);
                     
-                    //second row
+                    //second col
                     userCell=document.createElement("td");
+                    userCell.className = "album-cell";
 					userCell.textContent = album.ownerUserName;
                     row.appendChild(userCell);
                     
-                    //third row
+                    //third col
                     dateCell = document.createElement("td");
+                    dateCell.className = "album-cell";
                     dateCell.textContent = album.date;
                     row.appendChild(dateCell);
                     
                     
                     linkCell = document.createElement("td");
+                    linkCell.className = "album-cell";
                     anchor = document.createElement("a");
                     let linkText = document.createTextNode("Show");
                     anchor.appendChild(linkText);
@@ -271,17 +293,17 @@
 			    img.src = "/ImageRIA" + image.source;
 			    anchor.appendChild(img);
 			    
-			    anchor.setAttribute('idImage', image.imageId);
+			    anchor.setAttribute('idImage', image.id);
 
-				/*
+				
                 anchor.addEventListener("mouseover", (e) => {
 
                     e.preventDefault();
-                    let modal = document.getElementById("ModalWindow");
+                    let modal = document.getElementById("details");
                     modal.style.display = "block";           
-                    let arg = e.target.closest("a").getAttribute("idImage");
-                    photoDetailsTable.show(arg);
-                     }, false); */
+                    let selected = e.target.closest("a").getAttribute("idImage");
+                    imageDetailsTab.show(selected);
+                     }, false); 
                      
                 imageCell.appendChild(title);
                 imageCell.appendChild(anchor);
@@ -292,6 +314,7 @@
 			
 			if(currentSet*5 < images.length){
 				let scrollForward = document.createElement("button");
+				scrollForward.className = "btn btn-primary";
 				scrollForward.textContent = ">";
 				scrollForward.addEventListener("click", (e)=>{
 					e.preventDefault();
@@ -309,6 +332,130 @@
 	    }
 	}	
 	
+	
+	function ImageDetailsTab(message, table, body) {
+        this.message = message;
+        this.table = table;            // intera tabella html dei meetings
+        this.body = body;   // solo il body della tabella html dei meetings
+
+        this.reset = function () {
+            this.table.style.visibility = "hidden";
+        }
+
+
+        // chiama la update() se meeting non è vuota, altrimenti stampa l'alert
+        this.show = function (selected) {
+            let self = this;
+            
+
+            selectedImg = self.imageSearch(selected);
+
+            if (selectedImg !== undefined){
+
+                self.update(selectedImg);
+
+               	commentsTab.reset();  // devo farlo ogni volta per aggiornare la tabella
+                commentsTab.show(photoSelected.comments);
+
+            }
+            else this.message.textContent = "Problem on showing details";
+        };
+
+
+        this.imageSearch = function (imageId) {
+            let p;
+
+            images.forEach(function (image) {
+                if(image.id == imageId){
+                    p = image;
+                }
+            });
+
+            return p;
+        }
+
+
+        this.update = function (image) {
+
+            this.message.textContent = "";
+
+            let detailsTitle = document.getElementById("details-title");
+            let detailsDate = document.getElementById("details-date");
+            let detailsDescription = document.getElementById("details-description");
+            let detailsImage = document.getElementById("details-image");
+
+			
+            detailsTitle.textContent = image.title;
+            detailsDate.textContent = image.date;
+            detailsDescription.textContent = image.description;
+            detailsImage.src = "/ImageRIA"+image.source;
+            
+ 
+
+            this.table.style.visibility = "visible";
+        }
+
+    }
+	
+	
+	function CommentsTab(message, table, body) {
+        this.message = message;
+        this.table = table;            // intera tabella html dei meetings
+        this.body = body;    // solo il body della tabella html dei meetings
+
+        this.reset = function () {
+
+            this.body.innerHTML = "";
+            this.table.style.visibility = "hidden";
+        }
+
+        // chiama la update() se meeting non è vuota, altrimenti stampa l'alert
+        this.show = function (comments) {
+
+            let self = this;
+
+            // se albums non è vuota...
+            if (comments.length !== 0){
+
+                self.update(comments);
+                //commentForm.show();
+
+            }
+            else this.message.textContent = "No comments yet!";
+            commentForm.show();
+        };
+
+        // compila la tabella con i meetings che il server gli fornisce
+        this.update = function (comments) {
+
+            let len = comments.length;
+            let row, commentCell;
+
+            if (len === 0) {  // controllo inutile ma per sicurezza XD
+                message.textContent = "No comments yet!";
+
+            } else {
+                this.body.innerHTML = ""; // svuota il body della tabella
+                this.message.textContent = "";
+
+                let self = this;
+
+                comments.forEach(function (comment) {
+
+                    row = document.createElement("tr");
+
+                    // prima cella della riga (titolo)
+                    commentCell = document.createElement("td");
+                    commentCell.textContent = comment.username + ": " + comment.text;
+                    row.appendChild(commentCell);
+
+                    self.body.appendChild(row);
+                });
+                this.table.style.visibility = "visible";
+            }
+        }
+
+    }
 	
 	
 	
@@ -384,13 +531,5 @@
 	
 	
 	}
-	
-	
-
-
-
-
-
-
 	
 })();

@@ -6,6 +6,8 @@
 <script src="js/home.js" charset="utf-8" defer></script>
 <link rel="stylesheet" type="text/css" media="all"
 	href="css/bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" media="all"
+	href="css/homeStyle.css"/>
 <meta charset="ISO-8859-1">
 <title>Home Page</title>
 </head>
@@ -50,6 +52,58 @@
 			<tbody id='images-body'> </tbody>
 		</table>
 	</div>
+	
+	
+	<!-- modal window -->
+	<div id='modal' class="modal-window">
+          
+      	 <div class="modal-content">
+            <span class="close">&times;</span>
+
+            <p id="details-msg"></p>
+            <div class="vertical_flow">    <!-- div per la tabella di dettaglio -->
+                <table id="details">
+                     <tbody id="details-body">
+                        <tr>
+                            <th class = "detail-tab">Title</th><td class = "detail-tab" id="details-title">title</td>    <!-- prendo i td tramite selettore -->
+                        </tr>
+                        <tr>
+                            <th class = "detail-tab">Date</th><td class = "detail-tab" id="details-date">2020-02-02</td>
+                        </tr>
+                        <tr>
+                            <th class = "detail-tab">Description</th><td class = "detail-tab" id="details-description">This is a description</td>
+                        </tr>
+                        <tr>
+                            <th class = "detail-tab">Image</th><td class = "detail-tab"><img id="details-image" src="./photos/default.png" class="entire-img"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div> 
+               
+                
+            <p id="comment-msg"></p>
+            <div class="vertical_flow">   <!-- div per la parte dei commenti -->
+       
+                <table id="comments">
+                    <caption>Comments:</caption>
+                    <tbody id="comments-body"></tbody>
+                </table>
+ 
+                    
+                <fieldset id="comments-field">
+                    <form id="comments">
+                        <p>Write here to post a comment:</p>
+                        <input type="text" name="comment" placeholder="comment" required>
+                        <input type="hidden" name="imgSelected" value="1">
+                        <button id="comment-btn" type='submit'>Submit</button>
+                    </form>
+                </fieldset>
+
+            </div>
+
+        </div>
+    </div>
+
 	
 	
 	

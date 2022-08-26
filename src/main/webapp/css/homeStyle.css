@@ -1,0 +1,21 @@
+.image-thumbnail{
+	width: 290px;
+	height: 290px;
+	object-fit: cover;
+  	position: right;
+ 	border-radius:8px;
+}
+
+.album-cell{
+	padding: 7px;
+}
+
+
+.entire-img{
+	max-width: 1200px;
+	max-height: 600px; 
+}
+
+.detail-tab{
+	padding:10px;
+}
