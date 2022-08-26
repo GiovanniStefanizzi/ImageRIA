@@ -268,7 +268,7 @@
 				let anchor = document.createElement("a");
 			    let img = document.createElement("img");
 			    img.className = "image-thumbnail";
-			    img.src = image.source;
+			    img.src = "/ImageRIA" + image.source;
 			    anchor.appendChild(img);
 			    
 			    anchor.setAttribute('idImage', image.imageId);
