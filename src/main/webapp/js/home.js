@@ -45,6 +45,7 @@
 		this.refresh = function () {
 			userAlbumsTab.reset();
 			otherUserAlbumsTab.reset();
+			imagesTab.reset();
 		};
 		
 		
@@ -107,13 +108,13 @@
                     anchor.appendChild(linkText);
                     anchor.setAttribute('albumId', album.id);
 
-					/*anchor.addEventListener("click", (e) => {
+					anchor.addEventListener("click", (e) => {
 
                         e.preventDefault();
                         currentSet = 1;
-                        photoTable.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
+                        imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
 
-                    }, false);*/
+                    }, false);
                     anchor.href = "#";
 					
 					linkCell.appendChild(anchor);
@@ -190,7 +191,7 @@
 
                         e.preventDefault();
                         currentSet = 1;
-                        imagesTab.init(e.target.getAttribute("idAlbum"));  // quando faccio click su un album
+                        imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
 
                     }, false);
                     anchor.href = "#";
@@ -221,9 +222,7 @@
         
         this.init = function (albumId) {
             let photoController = new ImagesController(this.message);
-            
             photoController.getPhotos(albumId);
-            
         }
         
         this.show = function (images) {
@@ -234,11 +233,11 @@
         
         // compila la tabella con le foto che il server gli fornisce
         this.update = function (images) {
-        	let len = photos.length;
+        	let len = images.length;
         	let row;
         	
         	 this.body.innerHTML = ""; // svuota il body della tabella
-             this.message.textContent = "";
+             //this.message.textContent = "";
              
              let self = this;
              row = document.createElement("tr");
@@ -363,21 +362,16 @@
 	
 	function ImagesController(_message){
 		this.message = _message;
-		this.getPhotos = function(idAlbum) {
+		this.getPhotos = function(albumId) {
 	    	let self = this;
-	    	makeCall("GET", "GetImages?album=" + idAlbum, null,
+	    	makeCall("GET", "GetImages?album=" + albumId, null,
 				function (req) {
-					
                     if (req.readyState === XMLHttpRequest.DONE) {
-
-                        let _message = req.responseText;
+                        let resMessage = req.responseText;
 
                         if (req.status === 200) {
-							
-                            images = JSON.parse(_message);
+                            images = JSON.parse(resMessage);
                             imagesTab.show(images);
-
-				
                         } else {
 							
                             self.message.textContent = _message;

@@ -61,7 +61,9 @@ public class GetImages extends HttpServlet {
 		try {
 			Album album = albumDao.getById(albumId);
 			if(album == null) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Selected album does not exist");
+				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.getWriter().println("Selected album does not exist");
+				return;
 			}
 			images = albumDao.getAllImagesFromAlbum(album.getId());
 			
