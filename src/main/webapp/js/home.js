@@ -58,9 +58,10 @@
 			
 			
 			
-			 commentForm = new CommentForm(
+			commentForm = new CommentForm(
                 document.getElementById("comments-field"),
-                document.getElementById("comments-form"));
+                document.getElementById("comments-form")
+            );
 			
 		};
 		
@@ -435,7 +436,7 @@
 			
             let len = comments.length;
             let row, commentCell;
-
+			
             if (len === 0) {  // controllo inutile ma per sicurezza XD
                 message.textContent = "No comments yet!";
 				
