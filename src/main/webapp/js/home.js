@@ -8,13 +8,15 @@
 	
 	let currentSet = 1;
 	let images;
-	
+	let selectedImg;
 	
 	window.addEventListener("load", () => {
 		
         let pageOrchestrator = new PageOrchestrator();
         pageOrchestrator.start(); // inizializza i componenti
         pageOrchestrator.refresh(); // mostra i componenti
+        document.getElementById('close-btn').click();
+        
     }, false);
 	
 	
@@ -51,7 +53,7 @@
                 
                 
             commentsTab = new CommentsTab(
-				document.getElementById("comments-msg"),
+				document.getElementById("comment-msg"),
 				document.getElementById("comments"),
 				document.getElementById("comments-body")
 			);
@@ -62,7 +64,7 @@
                 document.getElementById("comments-field"),
                 document.getElementById("comments-form")
             );
-			
+            
 		};
 		
 		this.refresh = function () {
@@ -138,6 +140,8 @@
 
                         e.preventDefault();
                         currentSet = 1;
+                        document.getElementById('close-btn').click();
+						console.log("fra famme vere  " + document.getElementById('close-btn'))
                         imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
 
                     }, false);
@@ -150,6 +154,7 @@
                     self.body.appendChild(row);
 				});
 				 this.table.style.visibility = "visible";
+				 
 			}
 		}
 	}
@@ -177,6 +182,7 @@
 			
 			let len = otherUserAlbums.length;
 			let row, titleCell, dateCell, userCell, linkCell, anchor;
+			
 			
 			if(len === 0){
 				message.textContent = "There are no albums yet";
@@ -221,6 +227,7 @@
 
                         e.preventDefault();
                         currentSet = 1;
+                        document.getElementById('close-btn').click();
                         imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
 
                     }, false);
@@ -233,6 +240,7 @@
                     self.body.appendChild(row);
 				});
 				 this.table.style.visibility = "visible";
+				 
 			}
 		}
 	}
@@ -307,7 +315,7 @@
                 anchor.addEventListener("mouseover", (e) => {
 
                     e.preventDefault();
-                    let modal = document.getElementById("details");
+                    let modal = document.getElementById("modal");
                     modal.style.display = "block";           
                     let selected = e.target.closest("a").getAttribute("idImage");
                     imageDetailsTab.show(selected);
@@ -411,22 +419,27 @@
         this.body = body;    // solo il body della tabella html dei meetings
 
         this.reset = function () {
-
             this.body.innerHTML = "";
             this.table.style.visibility = "hidden";
-        }
+        };
 
         // chiama la update() se meeting non è vuota, altrimenti stampa l'alert
         this.show = function (comments) {
             let self = this;
             let commentList = comments
+            let msg = document.getElementById("comment-msg");
 
             // se albums non è vuota...
-            if (comments.length !== 0){
+            if (commentList.length !== 0){
+				msg.textContent = "";
                 self.update(commentList);
                 //commentForm.show();
 
-            }
+            } else { 
+				let msg = document.getElementById("comment-msg");
+				msg.textContent = "no commenti della fratella";
+			}
+			
             //else this.message.textContent = "No comments yet!";
             commentForm.show();
         };
@@ -560,5 +573,75 @@
 	
 	
 	}
+	
+	
+		
+	
+	
+	
+	// COMMENT FORM
+    document.getElementById("comment-btn").addEventListener('click', (e) => {
+        e.preventDefault();
+
+        let form = e.target.closest("form");
+
+        // imposto l'immagine selezionata nel campo selectedImg della form
+        document.getElementById("comments-form").elements["selectedImg"].value = selectedImg.id;
+
+
+        if (form.checkValidity()) {
+            makeCall("POST", 'Comments', e.target.closest("form"),
+                function(req) {
+                    if (req.readyState === XMLHttpRequest.DONE) {
+
+                        let message = req.responseText;     // risposta del server
+                        switch (req.status) {
+                            case 200:
+                                form.reset();
+                                let comments = JSON.parse(message);
+                                selectedImg.comments = comments;
+                                commentsTab.show(selectedImg.comments);
+
+                                break;
+                            case 400: // bad request
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                            case 401: // unauthorized
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                            case 500: // server error
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                        }
+                    }
+                }, false);
+        } else {
+            form.reportValidity();
+        }
+    });
+    
+    
+    
+    // MODAL WINDOW
+    document.getElementById("close-btn").addEventListener('click', () => {
+        let modal = document.getElementById("modal");
+        modal.style.display = "none";
+    });
+
+    // Quando clicki fuori dall finestra modale, questa si chiude
+    window.onclick = function(event) {
+        let modal = document.getElementById("modal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+	
+	
+	
+	
+	
+	
+	
 	
 })();

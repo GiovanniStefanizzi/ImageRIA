@@ -2,6 +2,8 @@ package controllers;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.List;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -11,7 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringEscapeUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import beans.Comment;
 import beans.User;
 import dao.CommentDAO;
 import utility.ConnectionHandler;
@@ -40,7 +45,7 @@ public class AddComment extends HttpServlet{
 		User user = null;
 		try {
 			user = (User)request.getSession().getAttribute("user");
-			imageId = Integer.parseInt(request.getParameter("image"));
+			imageId = Integer.parseInt(request.getParameter("selectedImg"));
 			text = StringEscapeUtils.escapeJava(request.getParameter("text"));
 		} catch (NumberFormatException |  NullPointerException e){
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -53,14 +58,23 @@ public class AddComment extends HttpServlet{
 		}
 		
 		CommentDAO commentDAO = new CommentDAO(connection);
-		
+		List<Comment> comments = null;
 		try {
 			commentDAO.addComment(imageId, user.getUserName(), text);
+			comments = commentDAO.getComments(imageId);
 		} catch (Exception e) {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().println("Error adding comment");
 			e.printStackTrace();
 		};
+		
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
+		String json = gson.toJson(comments);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+		response.getWriter().write(json);
+		
+		
 	}
 	
 
