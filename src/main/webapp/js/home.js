@@ -621,7 +621,7 @@
     });
     
     
-    
+    console.log("ciao")
     // MODAL WINDOW
     document.getElementById("close-btn").addEventListener('click', () => {
         let modal = document.getElementById("modal");
