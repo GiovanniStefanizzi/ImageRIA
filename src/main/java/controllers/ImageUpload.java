@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -19,8 +21,11 @@ import javax.servlet.http.Part;
 
 import org.apache.commons.lang.*;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import beans.Album;
+import beans.Image;
 import dao.AlbumDAO;
 import dao.ImageDAO;
 import utility.ConnectionHandler;
@@ -55,7 +60,8 @@ public class ImageUpload extends HttpServlet{
 		}
 		catch(NumberFormatException e) {
 			e.printStackTrace();
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Error getting albumId");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("Missing parameters");
 			
 		}
 		Part filePart = request.getPart("image");
@@ -68,7 +74,8 @@ public class ImageUpload extends HttpServlet{
 		
 		
 		if (filePart == null || title == null || title.isEmpty() || description == null || description.isEmpty() || albumId == null){
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing parameters");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("Missing parameters");
 			return;
 		}
 		
@@ -82,26 +89,34 @@ public class ImageUpload extends HttpServlet{
 		 
 		 AlbumDAO albumDAO = new AlbumDAO(connection);
 		 ImageDAO imageDAO = new ImageDAO(connection);
+		 List<Image> images = null;
 		 
 		 try {
 			 Album album = albumDAO.getById(albumId);
 			 if(album == null) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Album not found");
+				 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				 response.getWriter().println("Missing parameters");
 				return;
 				
 				//TODO: handle error
 			 }
 
 			 imageDAO.insertImage(title, description, albumId, fileSystemPath);
-			 
-			path = getServletContext().getContextPath() + "/Album?album="+album.getId()+"&page=1";
-			response.sendRedirect(path);
+			 images = albumDAO.getAllImagesFromAlbum(albumId);
+			
 			 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "error in image creation");
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("error in image creation");
 			return;
 		}
+		 
+		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
+     		String json = gson.toJson(images);
+	    	response.setContentType("application/json");
+			response.setCharacterEncoding("UTF-8");
+			response.getWriter().write(json);
 		 
 		 
 		
