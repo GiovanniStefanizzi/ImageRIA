@@ -16,7 +16,7 @@
         pageOrchestrator.start(); // inizializza i componenti
         pageOrchestrator.refresh(); // mostra i componenti
         document.getElementById('close-btn').click();
-        
+        console.log("we")
     }, false);
 	
 	
