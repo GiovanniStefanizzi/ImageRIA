@@ -3,7 +3,7 @@ package controllers;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -16,7 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import com.google.gson.Gson;
 
+import beans.Album;
 import beans.User;
 import dao.AlbumDAO;
 import utility.ConnectionHandler;
@@ -60,8 +62,12 @@ public class CreateAlbum extends HttpServlet {
 		
 		// create the album in the database
 		AlbumDAO albumDao = new AlbumDAO(connection);
+		List<Album> albums = null;
+		
 		try {
 			albumDao.createAlbum(userId, title);
+			albums = albumDao.getUserAlbums(userId);
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -70,6 +76,11 @@ public class CreateAlbum extends HttpServlet {
 			response.getWriter().println("failure in album creation process");
 			return;
 		}
+		
+		String json = new Gson().toJson(albums);
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+		response.getWriter().write(json);
 		
 	}
 

@@ -5,10 +5,14 @@
 	let imageDetailsTab;
 	let commentsTab;
 	let commentForm;
+	let albumForm;
+	let uploadForm;
+	let isUser = false;
 	
 	let currentSet = 1;
 	let images;
 	let selectedImg;
+	let albumId;
 	
 	window.addEventListener("load", () => {
 		
@@ -63,6 +67,16 @@
 			commentForm = new CommentForm(
                 document.getElementById("comments-field"),
                 document.getElementById("comments-form")
+            );
+            
+            albumForm = new AlbumForm(
+				document.getElementById("album-field"),
+                document.getElementById("album-form")
+            );
+            
+            uploadForm = new UploadForm(
+				document.getElementById("upload-field"),
+                document.getElementById("upload-form")
             );
             
 		};
@@ -135,15 +149,15 @@
                     let linkText = document.createTextNode("Show");
                     anchor.appendChild(linkText);
                     anchor.setAttribute('albumId', album.id);
-
+					anchor.setAttribute('isUser', true);
 					anchor.addEventListener("click", (e) => {
 
                         e.preventDefault();
                         currentSet = 1;
                         document.getElementById('close-btn').click();
-						console.log("fra famme vere  " + document.getElementById('close-btn'))
                         imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
-
+						isUser = e.target.getAttribute("isuser");
+						
                     }, false);
                     anchor.href = "#";
 					
@@ -157,6 +171,21 @@
 				 
 			}
 		}
+	}
+	
+	
+	function AlbumForm(field, form){
+		this.field = field;
+		this.form = form;
+
+        this.reset = function () {
+            this.field.style.visibility = "hidden";
+        }
+
+        this.show = function () {
+            this.field.style.visibility = "visible";
+        };
+		
 	}
 	
 	
@@ -222,14 +251,16 @@
                     let linkText = document.createTextNode("Show");
                     anchor.appendChild(linkText);
                     anchor.setAttribute('albumId', album.id);
+                    
 
 					anchor.addEventListener("click", (e) => {
-
+	
                         e.preventDefault();
                         currentSet = 1;
                         document.getElementById('close-btn').click();
+                        isUser = false;
                         imagesTab.init(e.target.getAttribute("albumId"));  // quando faccio click su un album
-
+						
                     }, false);
                     anchor.href = "#";
 					
@@ -256,15 +287,22 @@
 		this.reset = function () {
             this.body.innerHTML = "";
             this.table.style.visibility = "hidden";
+            
+            uploadForm.reset();
+            
         }
         
-        this.init = function (albumId) {
+        this.init = function (_albumId) {
             let photoController = new ImagesController(this.message);
-            photoController.getPhotos(albumId);
+            photoController.getPhotos(_albumId);
+            albumId = _albumId;
+            //uploadForm.show();
+            
         }
         
         this.show = function (images) {
             let self = this;
+            uploadForm.show();
             self.update(images);
         };
         
@@ -345,6 +383,8 @@
 			
 			self.body.appendChild(row);
             this.table.style.visibility = "visible";
+          
+            
 	    }
 	}	
 	
@@ -371,7 +411,7 @@
                 self.update(selectedImg);
                	commentsTab.reset();  // devo farlo ogni volta per aggiornare la tabella
                 commentsTab.show(selectedImg.comments);
-
+				
             }
             else this.message.textContent = "Problem on showing details";
         };
@@ -411,6 +451,31 @@
         }
 
     }
+    
+    function UploadForm(field, form){
+		this.field = field;
+		this.form = form;
+		let self = this;
+        this.reset = function () {
+			console.log("resetting upload")
+            this.field.style.visibility = "hidden";
+            //isUser = false;
+        }
+
+        this.show = function () {
+			
+			if (isUser){
+				console.log("qua sono " + isUser)
+				console.log("visualizing upload")
+            	this.field.style.visibility = "visible";
+            	
+            }
+            else self.reset();
+        }
+		
+	}
+    
+    
 	
 	
 	function CommentsTab(message, table, body) {
@@ -482,6 +547,7 @@
         this.form = form;
 
         this.reset = function () {
+			
             this.field.style.visibility = "hidden";
         }
 
@@ -551,9 +617,9 @@
 	
 	function ImagesController(_message){
 		this.message = _message;
-		this.getPhotos = function(albumId) {
+		this.getPhotos = function(_albumId) {
 	    	let self = this;
-	    	makeCall("GET", "GetImages?album=" + albumId, null,
+	    	makeCall("GET", "GetImages?album=" + _albumId, null,
 				function (req) {
                     if (req.readyState === XMLHttpRequest.DONE) {
                         let resMessage = req.responseText;
@@ -575,8 +641,40 @@
 	}
 	
 	
-		
-	
+	// ALBUM FORM	
+	document.getElementById("create-btn").addEventListener('click', (e) => {
+        e.preventDefault();
+
+        let form = e.target.closest("form");
+
+        if (form.checkValidity()) {
+            makeCall("POST", 'CreateAlbum', e.target.closest("form"),
+                function(req) {
+                    if (req.readyState === XMLHttpRequest.DONE) {
+
+                        let message = req.responseText;     // risposta del server
+                        switch (req.status) {
+                            case 200:
+                                form.reset();
+                                let albums = JSON.parse(message);
+                                userAlbumsTab.show(albums);
+                                break;
+                            case 400: // bad request
+                                document.getElementById("album-form-msg").textContent = message;
+                                break;
+                            case 401: // unauthorized
+                                document.getElementById("album-form-msg").textContent = message;
+                                break;
+                            case 500: // server error
+                                document.getElementById("album-form-msg").textContent = message;
+                                break;
+                        }
+                    }
+                }, false);
+        } else {
+            form.reportValidity();
+        }
+    });
 	
 	
 	// COMMENT FORM
@@ -620,23 +718,54 @@
         }
     });
     
+    // UPLOAD FORM
+    document.getElementById("upload-btn").addEventListener('click', (e) => {
+        e.preventDefault();
+
+        let form = e.target.closest("form");
+        
+		let frm = document.getElementById("upload-form");
+		frm.elements["albumId"].value = albumId;
+		console.log(frm.elements["albumId"]);
+
+        if (form.checkValidity()) {
+            makeCall("POST", 'Upload', e.target.closest("form"),
+                function(req) {
+                    if (req.readyState === XMLHttpRequest.DONE) {
+
+                        let message = req.responseText;     // risposta del server
+                        switch (req.status) {
+                            case 200:
+                                form.reset();
+                                let images = JSON.parse(images);
+                                imagesTab.show(images);
+
+                                break;
+                            case 400: // bad request
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                            case 401: // unauthorized
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                            case 500: // server error
+                                document.getElementById("comment-msg").textContent = message;
+                                break;
+                        }
+                    }
+                }, false);
+        } else {
+            form.reportValidity();
+        }
+    });
     
-    console.log("ciao")
+    
     // MODAL WINDOW
     document.getElementById("close-btn").addEventListener('click', () => {
         let modal = document.getElementById("modal");
         modal.style.display = "none";
     });
 
-    // Quando clicki fuori dall finestra modale, questa si chiude
-    window.onclick = function(event) {
-        let modal = document.getElementById("modal");
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-
-	
+    
 	
 	
 	

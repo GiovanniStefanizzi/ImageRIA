@@ -33,6 +33,16 @@
 	</div>
 	
 	
+	<!-- create album -->
+	<p id="album-form-msg"></p>
+	<fieldset id="album-field">
+	<form id="album-form">
+        <p>create an album:</p>
+        <input type="text" name="title" placeholder="title" required>
+        <button id="create-btn" type='submit'>Submit</button>
+    </form>
+    </fieldset>
+	
 	<!-- other albums -->
 	<div id='otheralbums'>
 		
@@ -114,9 +124,21 @@
 	<div id='comments'>
 	</div>
 	
-	<div id='upload-form'>
+	<!-- upload form -->
+	<div>
+	<p id="upload-msg"></p>
+	<fieldset id="upload-field">
+	<form id="upload-form">
+        <h3>Upload a new image</h3>
+        
+		<input class = "form-control" type="file" name="image" accept='image/*' required />
+		<input class = "form-control"type="text" name="title" placeholder="title" required />
+		<input class = "form-control"type="text" name="description" placeholder="description" required />
+		<input type="hidden" name="albumId" value="1">
+		<button id = "upload-btn" class = "btn btn-primary" type="submit">Submit</button>
+    </form>
+    </fieldset>
 	</div>
-	
 	
 
 </body>
