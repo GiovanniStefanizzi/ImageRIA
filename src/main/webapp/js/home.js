@@ -737,8 +737,9 @@
                         switch (req.status) {
                             case 200:
                                 form.reset();
-                                let images = JSON.parse(images);
-                                imagesTab.show(images);
+                                //let images;
+                                //images = JSON.parse(images);
+                                imagesTab.init(albumId);
 
                                 break;
                             case 400: // bad request

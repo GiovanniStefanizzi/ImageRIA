@@ -68,9 +68,11 @@ public class ImageUpload extends HttpServlet{
 		String title = StringEscapeUtils.escapeJava(request.getParameter("title"));
 		String description = StringEscapeUtils.escapeJava(request.getParameter("description"));
 		String path = System.getProperty("resources.imagesRIA");
+		String path2 = System.getProperty("resources.images");
 		String imagePath = path + "/resources/";
+		String imagePath2 = path2 + "/resources/";
 		String fileSystemPath = "/resources/";
-		
+		String fileSystemPath2 = fileSystemPath;
 		
 		
 		if (filePart == null || title == null || title.isEmpty() || description == null || description.isEmpty() || albumId == null){
@@ -82,9 +84,16 @@ public class ImageUpload extends HttpServlet{
 		 //User user = (User) request.getSession().getAttribute("user");
 		 String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
 		 fileSystemPath = fileSystemPath + fileName;
+		 fileSystemPath2 = fileSystemPath2 + fileName;
 		 File f = new File(imagePath + fileName);
+		 File f2 = new File(imagePath2 + fileName);
+		 
 		 try (OutputStream output = new FileOutputStream(f);  InputStream file = filePart.getInputStream()){
 			 file.transferTo(output);
+		 }
+		 
+		 try (OutputStream output2 = new FileOutputStream(f2);  InputStream file2 = filePart.getInputStream()){
+			 file2.transferTo(output2);
 		 }
 		 
 		 AlbumDAO albumDAO = new AlbumDAO(connection);
@@ -103,7 +112,7 @@ public class ImageUpload extends HttpServlet{
 
 			 imageDAO.insertImage(title, description, albumId, fileSystemPath);
 			 images = albumDAO.getAllImagesFromAlbum(albumId);
-			
+			 System.out.println("ciao frew");
 			 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -111,6 +120,8 @@ public class ImageUpload extends HttpServlet{
 			response.getWriter().println("error in image creation");
 			return;
 		}
+		 
+		
 		 
 		Gson gson = new GsonBuilder().setDateFormat("dd/MM/yyyy").create();
      		String json = gson.toJson(images);
