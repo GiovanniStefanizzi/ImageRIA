@@ -7,8 +7,8 @@
 	let commentForm;
 	let albumForm;
 	let uploadForm;
-	let isUser = false;
 	
+	let isUser = false;
 	let currentSet = 1;
 	let images;
 	let selectedImg;
@@ -20,14 +20,16 @@
         pageOrchestrator.start(); // inizializza i componenti
         pageOrchestrator.refresh(); // mostra i componenti
         document.getElementById('close-btn').click();
-        console.log("we")
+        document.getElementById("back-btn").style.visibility = "hidden";
+        
+      
     }, false);
 	
 	
 	
 	function PageOrchestrator(){
 		this.start = function () {
-			let username = sessionStorage.getItem('username')
+			let username = sessionStorage.getItem('username')	
 			let message = document.getElementById("greeting-msg")
 			message.textContent = "welcome back, " + username + "!";	
 			
@@ -79,10 +81,11 @@
                 document.getElementById("upload-form")
             );
             
+            
 		};
 		
 		this.refresh = function () {
-			userAlbumsTab.reset();
+			userAlbumsTab.reset();		
 			otherUserAlbumsTab.reset();
 			imagesTab.reset();
 		};
@@ -98,6 +101,14 @@
 		this.table = table;
 		this.body = body;
 		
+		this.visualize = function (){
+			this.table.style.display = "";
+		};
+		
+		this.hide = function (){
+			this.table.style.display = "none";
+		};
+	
 		
 		this.reset = function (){
 			this.body.innerHTML = "";
@@ -109,6 +120,14 @@
 		this.show = function (albums){
 			let self = this;
 			self.update(albums);
+			var elements = document.getElementsByClassName("draggable")
+      		for (let i = elements.length - 1; i >= 0; i--) {
+        		elements[i].draggable = true;
+        		elements[i].addEventListener("dragstart", dragStart); //save dragged element reference
+        		elements[i].addEventListener("dragover", dragOver); // change color of reference element to red
+        		elements[i].addEventListener("dragleave", dragLeave); // change color of reference element to black
+        		elements[i].addEventListener("drop", drop); //change position of dragged element using the referenced element 
+        	}
 		};	
 		
 		this.update = function(userAlbums){
@@ -127,6 +146,8 @@
 				
 				userAlbums.forEach(function (album){
 					row = document.createElement("tr");
+					row.className="draggable";
+					//row.draggable = true;
 					
 					
 					//first col
@@ -174,13 +195,97 @@
 	}
 	
 	
+	let startElement;
+
+    /* 
+        This fuction puts all row to "notselected" class, 
+        then we use CSS to put "notselected" in black and "selected" in red
+    */
+    function unselectRows(rowsArray) {
+        for (var i = 0; i < rowsArray.length; i++) {
+            rowsArray[i].className = "notselected";
+        }
+    }
+
+
+    /* 
+        The dragstart event is fired when the user starts 
+        dragging an element (if it is draggable=True)
+        https://developer.mozilla.org/en-US/docs/Web/API/Document/dragstart_event
+    */
+    function dragStart(event) {
+        /* we need to save in a variable the row that provoked the event
+         to then move it to the new position */
+        startElement = event.target.closest("tr");
+    }
+
+    /*
+        The dragover event is fired when an element 
+        is being dragged over a valid drop target.
+        https://developer.mozilla.org/es/docs/Web/API/Document/dragover_event
+    */
+    function dragOver(event) {
+        // We need to use prevent default, otherwise the drop event is not called
+        event.preventDefault(); 
+
+        // We need to select the row that triggered this event to marked as "selected" so it's clear for the user
+        var dest = event.target.closest("tr");
+
+        // Mark  the current element as "selected", then with CSS we will put it in red
+        dest.className = "selected";
+    }
+
+    /*
+        The dragleave event is fired when a dragged 
+        element leaves a valid drop target.
+        https://developer.mozilla.org/en-US/docs/Web/API/Document/dragleave_event
+    */
+    function dragLeave(event) {
+        // We need to select the row that triggered this event to marked as "notselected" so it's clear for the user 
+        var dest = event.target.closest("tr");
+
+        // Mark  the current element as "notselected", then with CSS we will put it in black
+        dest.className = "notselected";
+    }
+
+    /*
+        The drop event is fired when an element or text selection is dropped on a valid drop target.
+        https://developer.mozilla.org/en-US/docs/Web/API/Document/drop_event
+    */
+    function drop(event) {
+        
+        // Obtain the row on which we're dropping the dragged element
+        var dest = event.target.closest("tr");
+
+        // Obtain the index of the row in the table to use it as reference 
+        // for changing the dragged element possition
+        var table = dest.closest('table'); 
+        var rowsArray = Array.from(table.querySelectorAll('tbody > tr'));
+        var indexDest = rowsArray.indexOf(dest);
+
+        // Move the dragged element to the new position
+        if (rowsArray.indexOf(startElement) < indexDest)
+            // If we're moving down, then we insert the element after our reference (indexDest)
+            startElement.parentElement.insertBefore(startElement, rowsArray[indexDest + 1]);
+        else
+            // If we're moving up, then we insert the element before our reference (indexDest)
+            startElement.parentElement.insertBefore(startElement, rowsArray[indexDest]);
+
+        // Mark all rows in "not selected" class to reset previous dragOver
+        unselectRows(rowsArray);
+    }
+	
+	
+	
+	
+	
 	function AlbumForm(field, form){
 		this.field = field;
 		this.form = form;
 
         this.reset = function () {
             this.field.style.visibility = "hidden";
-        }
+        };
 
         this.show = function () {
             this.field.style.visibility = "visible";
@@ -194,6 +299,13 @@
 		this.table = table;
 		this.body = body;
 		
+		this.visualize = function (){
+			this.table.style.display  = "block";
+		};
+		
+		this.hide = function (){
+			this.table.style.display = "none";
+		};
 		
 		this.reset = function (){
 			this.body.innerHTML = "";
@@ -296,13 +408,17 @@
             let photoController = new ImagesController(this.message);
             photoController.getPhotos(_albumId);
             albumId = _albumId;
-            //uploadForm.show();
             
         }
         
         this.show = function (images) {
             let self = this;
             uploadForm.show();
+            userAlbumsTab.hide();
+        	otherUserAlbumsTab.hide();
+        	albumForm.reset();
+        	document.getElementById("save-btn").style.visibility = "hidden"
+        	document.getElementById("back-btn").style.visibility = "visible";
             self.update(images);
         };
         
@@ -313,13 +429,14 @@
         	let row;
         	
         	 this.body.innerHTML = ""; // svuota il body della tabella
-             //this.message.textContent = "";
+             
              
              let self = this;
              row = document.createElement("tr");
         
         	if(currentSet>1){
 				let scrollBack = document.createElement("button");
+				scrollBack.className="btn btn-primary";
 				scrollBack.textContent = "<";
 				scrollBack.addEventListener("click", (e)=>{
 					e.preventDefault();
@@ -457,16 +574,14 @@
 		this.form = form;
 		let self = this;
         this.reset = function () {
-			console.log("resetting upload")
+			
             this.field.style.visibility = "hidden";
-            //isUser = false;
+           
         }
 
         this.show = function () {
 			
 			if (isUser){
-				console.log("qua sono " + isUser)
-				console.log("visualizing upload")
             	this.field.style.visibility = "visible";
             	
             }
@@ -498,14 +613,14 @@
             if (commentList.length !== 0){
 				msg.textContent = "";
                 self.update(commentList);
-                //commentForm.show();
+               
 
             } else { 
 				let msg = document.getElementById("comment-msg");
-				msg.textContent = "no commenti della fratella";
+				msg.textContent = "There are no comments yet!";
 			}
 			
-            //else this.message.textContent = "No comments yet!";
+           
             commentForm.show();
         };
 
@@ -520,7 +635,7 @@
 				
             } else {
                 this.body.innerHTML = ""; // svuota il body della tabella
-                //message.textContent = "";
+                
 				
                 let self = this;
 
@@ -636,8 +751,6 @@
                 }
 			);
 		}	
-	
-	
 	}
 	
 	
@@ -726,7 +839,6 @@
         
 		let frm = document.getElementById("upload-form");
 		frm.elements["albumId"].value = albumId;
-		console.log(frm.elements["albumId"]);
 
         if (form.checkValidity()) {
             makeCall("POST", 'Upload', e.target.closest("form"),
@@ -737,8 +849,7 @@
                         switch (req.status) {
                             case 200:
                                 form.reset();
-                                //let images;
-                                //images = JSON.parse(images);
+                            
                                 imagesTab.init(albumId);
 
                                 break;
@@ -758,6 +869,66 @@
             form.reportValidity();
         }
     });
+    
+    
+    //SAVE ORDER
+    document.getElementById("save-btn").addEventListener('click', (e) => {
+	e.preventDefault();
+		let elements = document.getElementById("useralbums");
+		let form = document.getElementById("save-form");
+		let tableRows = elements.getElementsByTagName("a");
+		let el = [];
+		for(let i = 0 ; i < tableRows.length; i++){
+			el.push(tableRows[i].getAttribute("albumid"))
+		
+		}
+		let array = el.toString();
+		
+		
+		form.elements["order-arr"].value = array;
+		
+		     makeCall("POST", 'SaveOrder', e.target.closest("form"),
+                function(req) {
+                    if (req.readyState === XMLHttpRequest.DONE) {
+
+                        let message = req.responseText;     // risposta del server
+                        switch (req.status) {
+                            case 200:
+                                form.reset();
+                                break;
+                            case 400: // bad request
+                                document.getElementById("order-msg").textContent = message;
+                                break;
+                            case 401: // unauthorized
+                                document.getElementById("order-msg").textContent = message;
+                                break;
+                            case 500: // server error
+                                document.getElementById("order-msg").textContent = message;
+                                break;
+                        }
+                    }
+                }, false);
+		
+		
+		
+	}); 
+    
+    
+    //BACK BUTTON 
+    document.getElementById("back-btn").addEventListener('click', (e) => {
+		e.preventDefault();
+		imagesTab.reset();
+		document.getElementById("back-btn").style.visibility = "hidden";
+		otherUserAlbumsTab.visualize();
+		userAlbumsTab.visualize();
+		
+		document.getElementById("close-btn").click();
+		document.getElementById("save-btn").style.visibility = "visible";
+		albumForm.show();
+		
+	});
+    
+    	
     
     
     // MODAL WINDOW

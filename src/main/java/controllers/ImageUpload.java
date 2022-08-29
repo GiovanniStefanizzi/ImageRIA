@@ -26,6 +26,7 @@ import com.google.gson.GsonBuilder;
 
 import beans.Album;
 import beans.Image;
+import beans.User;
 import dao.AlbumDAO;
 import dao.ImageDAO;
 import utility.ConnectionHandler;
@@ -55,8 +56,10 @@ public class ImageUpload extends HttpServlet{
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		Integer albumId = null;
+		User user = null;
 		try {
 			albumId = Integer.parseInt(request.getParameter("albumId"));
+			user = (User)request.getSession().getAttribute("user");
 		}
 		catch(NumberFormatException e) {
 			e.printStackTrace();
@@ -64,6 +67,25 @@ public class ImageUpload extends HttpServlet{
 			response.getWriter().println("Missing parameters");
 			
 		}
+		AlbumDAO albumDAO = new AlbumDAO(connection);
+		Album album = null;
+		
+		try {
+			album = albumDAO.getById(albumId);
+		} catch (SQLException e) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("missing parameters");
+		}
+			 
+     	if(album.getOwnerId()!=user.getId()) {
+			 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			 response.getWriter().println("you can't upload here");
+			return;
+		}
+	
+	    	
+	    
+		
 		Part filePart = request.getPart("image");
 		String title = StringEscapeUtils.escapeJava(request.getParameter("title"));
 		String description = StringEscapeUtils.escapeJava(request.getParameter("description"));
@@ -96,24 +118,13 @@ public class ImageUpload extends HttpServlet{
 			 file2.transferTo(output2);
 		 }
 		 
-		 AlbumDAO albumDAO = new AlbumDAO(connection);
+		 
 		 ImageDAO imageDAO = new ImageDAO(connection);
 		 List<Image> images = null;
 		 
 		 try {
-			 Album album = albumDAO.getById(albumId);
-			 if(album == null) {
-				 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-				 response.getWriter().println("Missing parameters");
-				return;
-				
-				//TODO: handle error
-			 }
-
 			 imageDAO.insertImage(title, description, albumId, fileSystemPath);
 			 images = albumDAO.getAllImagesFromAlbum(albumId);
-			 System.out.println("ciao frew");
-			 
 		} catch (SQLException e) {
 			e.printStackTrace();
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

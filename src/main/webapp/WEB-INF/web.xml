@@ -21,5 +21,21 @@
 		<param-value>com.mysql.cj.jdbc.Driver</param-value>
 	</context-param>
 
+	<filter>
+		<filter-name>CheckLogin</filter-name>
+		<filter-class>filter.CheckLogin</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>CheckLogin</filter-name>
+		<url-pattern>/Home</url-pattern>
+		<url-pattern>/Comments</url-pattern>
+		<url-pattern>/CreateAlbum</url-pattern>
+		<url-pattern>/Album</url-pattern>
+		<url-pattern>/GetImages</url-pattern>
+		<url-pattern>/GetOtherAlbums</url-pattern>
+		<url-pattern>/GetUserAlbums</url-pattern>
+		<url-pattern>/Upload</url-pattern>
+	</filter-mapping>
+
 
 </web-app>

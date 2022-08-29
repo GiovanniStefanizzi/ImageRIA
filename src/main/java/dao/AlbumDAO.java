@@ -19,7 +19,7 @@ public class AlbumDAO {
 	public List<Album> getUserAlbums(int ownerId) throws SQLException{
 		
 		List<Album> albums = new ArrayList<Album>();	
-		String query = "SELECT * FROM imagegallery.album WHERE ownerId = ? ORDER BY date DESC";
+		String query = "SELECT * FROM imagegallery.album WHERE ownerId = ? ORDER BY `order` ASC, date DESC";
 		
 		try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
 			preparedStatement.setInt(1, ownerId);
@@ -150,7 +150,7 @@ public class AlbumDAO {
 	 }
 	 
 	 public List<Image> getAllImagesFromAlbum(int albumId) throws SQLException{
-List<Image> images = new ArrayList<>();
+		 List<Image> images = new ArrayList<>();
 		 
 		 String queryString = "SELECT * FROM imagegallery.image " +
 				 				"WHERE idAlbum = ? ORDER BY Date DESC";
@@ -172,6 +172,23 @@ List<Image> images = new ArrayList<>();
 			 } 
 		 } 
 		 return images;
+	 }
+	 
+	 
+	 public void saveOrder(int albumId, int order) throws SQLException {
+		 String query = "UPDATE `imagegallery`.`album` SET `order` = ? WHERE (`idAlbum` = ?)";
+		 
+
+		 connection.setAutoCommit(false);
+		 
+		 try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setInt(1, order);
+				preparedStatement.setInt(2, albumId);
+				preparedStatement.executeUpdate();
+				connection.commit();
+		} 		
+		 
+		 
 	 }
 	 
 }
